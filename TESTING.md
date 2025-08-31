@@ -215,3 +215,126 @@ curl -X POST http://localhost:3000/auth/login \
   -d '{"username":"nonexistent","password":"password123"}'
 # Ожидаем: 401, {"error":"Неверные данные"}
 ```
+
+## Тесты API постов
+
+**Важно:** Для тестов ниже требуется токен авторизации. Получите его, выполнив тест №16 или №17
+
+```bash
+sudo apt install jq -y
+```
+
+```bash
+# Пример сохранения токена в переменную (для Linux/macOS)
+export TOKEN=$(curl -s -X POST http://localhost:3000/auth/login -H "Content-Type: application/json" -d '{"username":"testuser123","password":"securepassword"}' | jq -r .token)
+```
+
+### 24. Создание поста (успех)
+
+```bash
+curl -X POST http://localhost:3000/posts \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Мой тестовый пост","content":"Содержимое поста."}'
+
+# Ожидаем: 201, тело поста в JSON.
+
+# Сохраните ID поста из ответа для следующих тестов.
+export POST_ID=$(curl -s -X POST http://localhost:3000/posts -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -d '{"title":"Мой тестовый пост","content":"Содержимое поста."}' | jq -r .id)
+```
+
+### 25. Создание поста (без авторизации)
+
+```bash
+curl -X POST http://localhost:3000/posts \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Пост от анонима","content":"Не должен создаться."}'
+# Ожидаем: 401, {"error":"Токен отсутствует"}
+```
+
+### 26. Создание поста (невалидные данные)
+
+```bash
+curl -X POST http://localhost:3000/posts \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Пост без содержимого"}'
+
+# Ожидаем: 400, {"error":"Заголовок и содержимое поста обязательны"}
+```
+
+### 27. Получение всех постов
+
+```bash
+curl http://localhost:3000/posts
+# Ожидаем: 200, массив постов.
+```
+
+### 28. Получение одного поста по ID
+
+```bash
+curl http://localhost:3000/posts/$POST_ID
+# Ожидаем: 200, тело поста.
+```
+
+### 29. Получение несуществующего поста
+
+```bash
+curl http://localhost:3000/posts/123e4567-e89b-12d3-a456-426614174000
+# Ожидаем: 404, {"error":"Пост не найден"}
+```
+
+### 30. Обновление поста (успех, автор)
+
+```bash
+curl -X PUT http://localhost:3000/posts/$POST_ID \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Обновленный заголовок"}'
+
+# Ожидаем: 200, обновленное тело поста.
+```
+
+### 31. Обновление поста (чужой пост)
+
+**Подготовка:** Создайте второго пользователя и получите его токен.
+
+```bash
+# Создаем второго юзера
+curl -X POST http://localhost:3000/auth/register -H "Content-Type: application/json" -d '{"username":"otheruser","email":"other@test.com","password":"password"}'
+# Получаем его токен
+export TOKEN_OTHER=$(curl -s -X POST http://localhost:3000/auth/login -H "Content-Type: application/json" -d '{"username":"otheruser","password":"password"}' | jq -r .token)
+```
+
+**Тест:**
+
+```bash
+curl -X PUT http://localhost:3000/posts/$POST_ID \
+  -H "Authorization: Bearer $TOKEN_OTHER" \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Попытка изменить чужой пост"}'
+
+# Ожидаем: 403, {"error":"Доступ запрещен"}
+```
+
+### 32. Удаление поста (успех, автор)
+
+```bash
+curl -X DELETE -H "Authorization: Bearer $TOKEN" http://localhost:3000/posts/$POST_ID
+# Ожидаем: 204 No Content
+```
+
+### 33. Удаление поста (чужой пост)
+
+**Подготовка:** Сначала снова создайте пост от имени первого пользователя, так как мы его удалили.
+
+```bash
+export POST_ID=$(curl -s -X POST http://localhost:3000/posts -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -d '{"title":"Еще один пост на удаление","content":"..."}' | jq -r .id)
+```
+
+**Тест:**
+
+```bash
+curl -X DELETE -H "Authorization: Bearer $TOKEN_OTHER" http://localhost:3000/posts/$POST_ID
+# Ожидаем: 403, {"error":"Доступ запрещен"}
+```

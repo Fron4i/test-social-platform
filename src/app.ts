@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
 import authRoutes from './routes/auth';
+import postRoutes from './routes/posts';
 
 if (process.env.NODE_ENV !== 'test') {
   dotenv.config();
@@ -20,6 +21,7 @@ app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 app.use('/auth', authRoutes);
+app.use('/posts', postRoutes);
 
 app.get('/health', (req: Request, res: Response) => {
   res.json({ status: 'ОК' });

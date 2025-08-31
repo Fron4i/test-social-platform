@@ -1,13 +1,14 @@
 import { Request, Response } from 'express';
 import * as jwt from 'jsonwebtoken';
-import { AppDataSource } from '../config/database';
 import { User } from '../entities/User';
 import type { StringValue } from 'ms';
+import { DataSource } from 'typeorm';
 
 export class AuthController {
   static async register(req: Request, res: Response) {
     try {
       const { username, email, password } = req.body;
+      const dataSource: DataSource = req.app.get('dataSource');
 
       if (!username || !email || !password) {
         return res.status(400).json({ error: 'Заполните все поля' });
@@ -17,7 +18,7 @@ export class AuthController {
         return res.status(400).json({ error: 'Пароль должен быть минимум 6 символов' });
       }
 
-      const userRepo = AppDataSource.getRepository(User);
+      const userRepo = dataSource.getRepository(User);
 
       const existingUser = await userRepo.findOne({
         where: [{ username }, { email }]
@@ -59,12 +60,13 @@ export class AuthController {
   static async login(req: Request, res: Response) {
     try {
       const { username, password } = req.body;
+      const dataSource: DataSource = req.app.get('dataSource');
 
       if (!username || !password) {
         return res.status(400).json({ error: 'Введите логин и пароль' });
       }
 
-      const userRepo = AppDataSource.getRepository(User);
+      const userRepo = dataSource.getRepository(User);
       
       const user = await userRepo.findOne({
         where: [{ username }, { email: username }],

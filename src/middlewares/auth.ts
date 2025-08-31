@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import * as jwt from 'jsonwebtoken';
-import { AppDataSource } from '../config/database';
+import { DataSource } from 'typeorm';
 import { User } from '../entities/User';
 
 interface AuthRequest extends Request {
@@ -16,9 +16,10 @@ export const authMiddleware = async (req: AuthRequest, res: Response, next: Next
       return res.status(401).json({ error: 'Токен отсутствует' });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { id: string };
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret') as { id: string };
     
-    const userRepo = AppDataSource.getRepository(User);
+    const dataSource: DataSource = req.app.get('dataSource');
+    const userRepo = dataSource.getRepository(User);
     const user = await userRepo.findOne({ 
       where: { id: decoded.id },
       select: ['id', 'username', 'email', 'createdAt']

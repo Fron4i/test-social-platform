@@ -39,3 +39,17 @@ export const closeDatabase = async (): Promise<void> => {
     console.error('Ошибка закрытия БД:', error);
   }
 };
+
+export const getDataSource = (env: string) => {
+  if (env === 'test') {
+    return new DataSource({
+      type: 'better-sqlite3',
+      database: ':memory:',
+      synchronize: true,
+      dropSchema: true,
+      entities: [User, Post],
+      logging: false
+    });
+  }
+  return AppDataSource;
+};

@@ -29,6 +29,8 @@ coverage/
 .idea/
 .claude/*
 .claude
+.gemini/*
+.gemini
 *.swp
 *.swo
 *~
@@ -37,6 +39,7 @@ coverage/
 .DS_Store?
 ._*
 .Spotlight-V100
+GEMINI.md
 .Trashes
 roadmap.md
 ehthumbs.db

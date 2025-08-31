@@ -2,7 +2,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import app from './app';
-import { initializeDatabase, closeDatabase } from './config/database';
+import { AppDataSource, initializeDatabase, closeDatabase } from './config/database';
 import { Server } from 'http';
 
 const PORT = parseInt(process.env.PORT || '3000');
@@ -12,6 +12,7 @@ let serverInstance: Server | undefined;
 const startServer = async () => {
 	try {
 		await initializeDatabase();
+        app.set('dataSource', AppDataSource);
 
 		serverInstance = app.listen(PORT, '0.0.0.0', () => {
 			console.log(`Сервер запущен на порту ${PORT}`);
