@@ -1,3 +1,43 @@
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Post:
+ *       type: object
+ *       required:
+ *         - title
+ *         - content
+ *         - authorId
+ *       properties:
+ *         id:
+ *           type: string
+ *           format: uuid
+ *           description: Уникальный идентификатор поста
+ *           example: 123e4567-e89b-12d3-a456-426614174000
+ *         title:
+ *           type: string
+ *           description: Заголовок поста
+ *           example: Мой первый пост
+ *         content:
+ *           type: string
+ *           description: Содержимое поста
+ *           example: Это содержимое моего первого поста.
+ *         authorId:
+ *           type: string
+ *           format: uuid
+ *           description: ID автора поста
+ *           example: 098f6bcd-4621-3373-85ee-090000000000
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *           description: Дата и время создания поста
+ *           example: 2023-10-27T10:00:00Z
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
+ *           description: Дата и время последнего обновления поста
+ *           example: 2023-10-27T10:30:00Z
+ */
 import {
   Entity,
   PrimaryGeneratedColumn,

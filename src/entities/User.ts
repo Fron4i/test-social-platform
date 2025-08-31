@@ -1,3 +1,30 @@
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     User:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *           format: uuid
+ *           description: Уникальный идентификатор пользователя
+ *           example: 098f6bcd-4621-3373-85ee-090000000000
+ *         username:
+ *           type: string
+ *           description: Имя пользователя
+ *           example: testuser123
+ *         email:
+ *           type: string
+ *           format: email
+ *           description: Email пользователя
+ *           example: test123@example.com
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *           description: Дата и время создания пользователя
+ *           example: 2023-10-27T10:00:00Z
+ */
 import {
   Entity,
   PrimaryGeneratedColumn,

@@ -2,6 +2,8 @@ import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
+import swaggerUi from 'swagger-ui-express';
+import swaggerSpec from './config/swagger';
 import authRoutes from './routes/auth';
 import postRoutes from './routes/posts';
 
@@ -33,6 +35,8 @@ app.get('/', (req: Request, res: Response) => {
     version: '1.0.0'
   });
 });
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use((req: Request, res: Response) => {
   res.status(404).json({ error: 'Не найдено' });
