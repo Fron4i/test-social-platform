@@ -123,9 +123,9 @@ describe('Интеграционные тесты API для постов', () =
 			const response = await request(app).get('/posts')
 
 			expect(response.status).toBe(200)
-			expect(Array.isArray(response.body)).toBe(true)
-			expect(response.body.length).toBe(2)
-			expect(response.body[0].title).toBe('Пост 1')
+			expect(Array.isArray(response.body.data)).toBe(true)
+			expect(response.body.data.length).toBe(2)
+			expect(response.body.data[0].title).toBe('Пост 1')
 		})
 
 		it('должен вернуть один пост по ID', async () => {
@@ -181,13 +181,11 @@ describe('Интеграционные тесты API для постов', () =
 
 			const postId = createResponse.body.id
 
-			await request(app)
-				.post('/auth/register')
-				.send({
-					username: 'otheruser',
-					email: 'other@user.com',
-					password: 'password',
-				})
+			await request(app).post('/auth/register').send({
+				username: 'otheruser',
+				email: 'other@user.com',
+				password: 'password',
+			})
 			const loginResponse = await request(app)
 				.post('/auth/login')
 				.send({ username: 'otheruser', password: 'password' })
@@ -241,13 +239,11 @@ describe('Интеграционные тесты API для постов', () =
 				.send({ title: 'Чужой пост', content: '...' })
 			const postId = createResponse.body.id
 
-			await request(app)
-				.post('/auth/register')
-				.send({
-					username: 'deleter',
-					email: 'deleter@user.com',
-					password: 'password',
-				})
+			await request(app).post('/auth/register').send({
+				username: 'deleter',
+				email: 'deleter@user.com',
+				password: 'password',
+			})
 			const loginResponse = await request(app)
 				.post('/auth/login')
 				.send({ username: 'deleter', password: 'password' })
@@ -258,6 +254,69 @@ describe('Интеграционные тесты API для постов', () =
 				.set('Authorization', `Bearer ${otherToken}`)
 
 			expect(response.status).toBe(403)
+		})
+	})
+
+	describe('GET /posts - Пагинация постов', () => {
+		beforeEach(async () => {
+			const postRepo = dataSource.getRepository(Post)
+			await postRepo.query('DELETE FROM posts')
+			for (let i = 1; i <= 25; i++) {
+				await request(app)
+					.post('/posts')
+					.set('Authorization', `Bearer ${token}`)
+					.send({ title: `Пост ${i}`, content: `Содержимое ${i}` })
+			}
+		})
+
+		it('должен вернуть первую страницу с 10 постами', async () => {
+			const response = await request(app).get('/posts?page=1&limit=10')
+
+			expect(response.status).toBe(200)
+			expect(response.body.data.length).toBe(10)
+			expect(response.body.data[0].title).toBe('Пост 1')
+			expect(response.body.data[9].title).toBe('Пост 10')
+		})
+
+		it('должен вернуть вторую страницу с 10 постами', async () => {
+			const response = await request(app).get('/posts?page=2&limit=10')
+
+			expect(response.status).toBe(200)
+			expect(response.body.data.length).toBe(10)
+			expect(response.body.data[0].title).toBe('Пост 11')
+			expect(response.body.data[9].title).toBe('Пост 20')
+		})
+
+		it('должен вернуть третью страницу с 5 последними постами', async () => {
+			const response = await request(app).get('/posts?page=3&limit=10')
+
+			expect(response.status).toBe(200)
+			expect(response.body.data.length).toBe(5)
+			expect(response.body.data[0].title).toBe('Пост 21')
+			expect(response.body.data[4].title).toBe('Пост 25')
+		})
+
+		it('должен вернуть первую страницу с 5 постами', async () => {
+			const response = await request(app).get('/posts?page=1&limit=5')
+
+			expect(response.status).toBe(200)
+			expect(response.body.data.length).toBe(5)
+			expect(response.body.data[0].title).toBe('Пост 1')
+			expect(response.body.data[4].title).toBe('Пост 5')
+		})
+
+		it('должен вернуть все посты, если параметры пагинации не указаны', async () => {
+			const response = await request(app).get('/posts')
+
+			expect(response.status).toBe(200)
+			expect(response.body.data.length).toBe(20)
+		})
+
+		it('должен вернуть пустой массив, если запрошенная страница не существует', async () => {
+			const response = await request(app).get('/posts?page=4&limit=10')
+
+			expect(response.status).toBe(200)
+			expect(response.body.data.length).toBe(0)
 		})
 	})
 })

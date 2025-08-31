@@ -51,7 +51,7 @@ curl http://localhost:3000/nonexistent-route
 ```bash
 curl -X POST http://localhost:3000/auth/register \
   -H "Content-Type: application/json" \
-  -d '{}'
+  -d "{}"
 # Ожидаем: 400, {"error":"Заполните все поля"}
 ```
 
@@ -78,7 +78,7 @@ curl -X POST http://localhost:3000/auth/register \
 ```bash
 curl -X POST http://localhost:3000/auth/login \
   -H "Content-Type: application/json" \
-  -d '{}'
+  -d "{}"
 # Ожидаем: 400, {"error":"Введите логин и пароль"}
 ```
 
@@ -133,7 +133,7 @@ curl -H "Authorization: " http://localhost:3000/auth/profile
 ```bash
 curl -X POST http://localhost:3000/auth/unknown \
   -H "Content-Type: application/json" \
-  -d '{}'
+  -d "{}"
 # Ожидаем: 404, {"error":"Не найдено"}
 ```
 
@@ -337,4 +337,56 @@ export POST_ID=$(curl -s -X POST http://localhost:3000/posts -H "Authorization: 
 ```bash
 curl -X DELETE -H "Authorization: Bearer $TOKEN_OTHER" http://localhost:3000/posts/$POST_ID
 # Ожидаем: 403, {"error":"Доступ запрещен"}
+```
+
+## Тесты пагинации постов
+
+**Важно:** Перед выполнением этих тестов убедитесь, что у вас создано достаточно постов (например, 25 или более), чтобы проверить пагинацию. Вы можете создать их вручную или использовать скрипт.
+
+### 34. Получение всех постов (по умолчанию)
+
+```bash
+curl http://localhost:3000/posts
+# Ожидаем: 200, объект с полями "data" (массив из 20 постов) и "meta" (информация о пагинации).
+# Пример: {"data":[...20 постов...],"meta":{"total":25,"page":1,"limit":20,"totalPages":2}}
+```
+
+### 35. Получение первой страницы (limit=10)
+
+```bash
+curl http://localhost:3000/posts?page=1&limit=10
+# Ожидаем: 200, объект с "data" (массив из 10 постов) и "meta".
+# Проверьте, что это первые 10 постов (например, "Пост 1" - "Пост 10" если сортировка по возрастанию).
+```
+
+### 36. Получение второй страницы (limit=10)
+
+```bash
+curl http://localhost:3000/posts?page=2&limit=10
+# Ожидаем: 200, объект с "data" (массив из 10 постов) и "meta".
+# Проверьте, что это следующие 10 постов (например, "Пост 11" - "Пост 20").
+```
+
+### 37. Получение третьей страницы (limit=10)
+
+```bash
+curl http://localhost:3000/posts?page=3&limit=10
+# Ожидаем: 200, объект с "data" (массив из 5 постов) и "meta".
+# Проверьте, что это последние 5 постов (например, "Пост 21" - "Пост 25").
+```
+
+### 38. Получение первой страницы (limit=5)
+
+```bash
+curl http://localhost:3000/posts?page=1&limit=5
+# Ожидаем: 200, объект с "data" (массив из 5 постов) и "meta".
+# Проверьте, что это первые 5 постов (например, "Пост 1" - "Пост 5").
+```
+
+### 39. Получение несуществующей страницы
+
+```bash
+curl http://localhost:3000/posts?page=100&limit=10
+# Ожидаем: 200, объект с "data" (пустой массив) и "meta".
+# Пример: {"data":[],"meta":{"total":25,"page":100,"limit":10,"totalPages":3}}
 ```
