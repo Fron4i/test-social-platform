@@ -49,14 +49,14 @@ export class User {
   posts: Post[];
 
   @BeforeInsert()
-  async hashPassword() {
+  async encryptPassword() {
     if (this.password) {
       this.password = await bcrypt.hash(this.password, 12);
     }
   }
 
   @BeforeUpdate()
-  async hashPasswordOnUpdate() {
+  async updatePasswordHash() {
     if (this.password && !this.password.startsWith('$2b$')) {
       this.password = await bcrypt.hash(this.password, 12);
     }
