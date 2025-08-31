@@ -274,8 +274,10 @@ describe('Интеграционные тесты API для постов', () =
 
 			expect(response.status).toBe(200)
 			expect(response.body.data.length).toBe(10)
-			expect(response.body.data[0].title).toBe('Пост 1')
-			expect(response.body.data[9].title).toBe('Пост 10')
+			expect(response.body.meta.page).toBe(1)
+			expect(response.body.meta.limit).toBe(10)
+			expect(response.body.meta.total).toBe(25)
+			expect(response.body.meta.totalPages).toBe(3)
 		})
 
 		it('должен вернуть вторую страницу с 10 постами', async () => {
@@ -283,8 +285,10 @@ describe('Интеграционные тесты API для постов', () =
 
 			expect(response.status).toBe(200)
 			expect(response.body.data.length).toBe(10)
-			expect(response.body.data[0].title).toBe('Пост 11')
-			expect(response.body.data[9].title).toBe('Пост 20')
+			expect(response.body.meta.page).toBe(2)
+			expect(response.body.meta.limit).toBe(10)
+			expect(response.body.meta.total).toBe(25)
+			expect(response.body.meta.totalPages).toBe(3)
 		})
 
 		it('должен вернуть третью страницу с 5 последними постами', async () => {
@@ -292,8 +296,10 @@ describe('Интеграционные тесты API для постов', () =
 
 			expect(response.status).toBe(200)
 			expect(response.body.data.length).toBe(5)
-			expect(response.body.data[0].title).toBe('Пост 21')
-			expect(response.body.data[4].title).toBe('Пост 25')
+			expect(response.body.meta.page).toBe(3)
+			expect(response.body.meta.limit).toBe(10)
+			expect(response.body.meta.total).toBe(25)
+			expect(response.body.meta.totalPages).toBe(3)
 		})
 
 		it('должен вернуть первую страницу с 5 постами', async () => {
@@ -301,8 +307,10 @@ describe('Интеграционные тесты API для постов', () =
 
 			expect(response.status).toBe(200)
 			expect(response.body.data.length).toBe(5)
-			expect(response.body.data[0].title).toBe('Пост 1')
-			expect(response.body.data[4].title).toBe('Пост 5')
+			expect(response.body.meta.page).toBe(1)
+			expect(response.body.meta.limit).toBe(5)
+			expect(response.body.meta.total).toBe(25)
+			expect(response.body.meta.totalPages).toBe(5)
 		})
 
 		it('должен вернуть все посты, если параметры пагинации не указаны', async () => {

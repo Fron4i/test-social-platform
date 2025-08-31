@@ -94,18 +94,25 @@ export class AuthController {
         return res.status(400).json({ error: 'Пользователь уже существует' });
       }
 
-      const hashedPassword = await bcrypt.hash(password, 10);
-
       const user = new User();
       user.username = username;
       user.email = email;
-      user.password = hashedPassword;
+      user.password = password;
 
-      await userRepo.save(user);
+      const savedUser = await userRepo.save(user);
 
-      const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET || 'secret', { expiresIn: '1h' });
+      const token = jwt.sign({ id: savedUser.id }, process.env.JWT_SECRET || 'secret', { expiresIn: '1h' });
 
-      return res.status(201).json({ message: 'Регистрация успешна', token, user: { id: user.id, username: user.username, email: user.email } });
+      return res.status(201).json({ 
+        message: 'Регистрация успешна', 
+        token, 
+        user: { 
+          id: savedUser.id, 
+          username: savedUser.username, 
+          email: savedUser.email,
+          createdAt: savedUser.createdAt
+        } 
+      });
     } catch (error) {
       console.error('Ошибка при регистрации:', error);
       return res.status(500).json({ error: 'Внутренняя ошибка сервера' });
@@ -195,10 +202,11 @@ export class AuthController {
 
       const userRepo = dataSource.getRepository(User);
       
-      const user = await userRepo.findOne({
-        where: [{ username }, { email: username }],
-        select: ['id', 'username', 'email', 'password', 'createdAt']
-      });
+      const user = await userRepo
+        .createQueryBuilder('user')
+        .where('user.username = :username OR user.email = :username', { username })
+        .addSelect('user.password')
+        .getOne();
 
       if (!user) {
         return res.status(401).json({ error: 'Неверные данные' });
@@ -284,5 +292,31 @@ export class AuthController {
    *                   example: Внутренняя ошибка сервера
    */
   static async getProfile(req: any, res: Response) {
-}
+    try {
+      const dataSource: DataSource = req.app.get('dataSource');
+      const userRepo = dataSource.getRepository(User);
+
+      const user = await userRepo.findOne({
+        where: { id: req.user.id },
+        select: ['id', 'username', 'email', 'createdAt']
+      });
+
+      if (!user) {
+        return res.status(404).json({ error: 'Пользователь не найден' });
+      }
+
+      res.json({
+        message: 'Профиль пользователя',
+        user: {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          createdAt: user.createdAt
+        }
+      });
+    } catch (error) {
+      console.error('Ошибка при получении профиля:', error);
+      return res.status(500).json({ error: 'Внутренняя ошибка сервера' });
+    }
+  }
 }
